@@ -1,2 +1,3 @@
-result: "twos"
 validate: true
+nums: [3]
+result: "ones"

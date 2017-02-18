@@ -21,7 +21,8 @@ def poker_distribute():
 def pattern_spot(in_cards):
     patterns = {'two_jokers': 0, 'fours': {}, 'threes': {}, 'twos': {}, 'ones': {}, 'four_two_ones': [], 'four_two_twos': [],
                 'three_twos': [], 'three_ones': [], 'straights': [], 'straights_double': [],
-                'straights_triple': [], 'st_with_twos': [], 'st_with_ones': []} #字典的底层value都是牌的序号格式为{牌: 牌的序号}
+                'straights_triple': [], 'st_with_twos': [], 'st_with_ones': [], 'st3_with_twos': [], 'st3_with_ones': [],
+                'st4_with_twos': [], 'st4_with_ones': []} #字典的底层value都是牌的序号格式为{牌: 牌的序号}
     """
     单、对、三带、炸弹的格式为{牌: 牌的序号}
     顺子（单顺/双顺/飞机）的格式[{牌：序，牌：序……}，{牌：序，牌：序……}],用列表表示多个顺子或者多个飞机
@@ -134,20 +135,22 @@ def pattern_spot(in_cards):
         if len(cards) >= 2:
             patterns['straights_triple'].append(cards)
     """找到四带二"""
-    if patterns['fours'] and len(patterns['ones']) > 1:
+    if patterns['fours']:
         for f in patterns['fours'].keys():
-            tmp = list(patterns['ones'].keys())
-            if f in tmp:
-                tmp.remove(f)
+            tmp = nums.copy()
             if len(tmp) < 2:
                 continue
             i = 0
             while i < len(tmp)-1:
+                if tmp[i] == f:  #判断所带的数字是否和炸弹的数字一样
+                    i += 1
+                    continue
                 j = i + 1
                 while j < len(tmp):
-                    patterns['four_two_ones'].append(({f: patterns['fours'][f]},
-                                                  {tmp[i]: patterns['ones'][tmp[i]]},
-                                                  {tmp[j]: patterns['ones'][tmp[j]]}))
+                    if tmp[j] == f:
+                        j += 1
+                        continue
+                    patterns['four_two_ones'].append(({f: patterns['fours'][f]}, {tmp[i]: i}, {tmp[j]: j}))
                     j += 1
                 i += 1
     if patterns['fours'] and len(patterns['twos']) > 1:
@@ -166,18 +169,18 @@ def pattern_spot(in_cards):
                                                   {tmp[j]: patterns['twos'][tmp[j]]}))
                     j += 1
                 i += 1
-    """找到三带二"""
-    if patterns['threes'] and len(patterns['ones']) > 0:
+    """找到三带一"""
+    if patterns['threes']:
         for f in patterns['threes'].keys():
-            tmp = list(patterns['ones'].keys())
-            if f in tmp:
-                tmp.remove(f)
+            tmp = nums.copy()
             if len(tmp) < 1:
                 continue
             i = 0
             while i < len(tmp):
-                patterns['three_ones'].append(({f: patterns['threes'][f]},
-                                              {tmp[i]: patterns['ones'][tmp[i]]}))
+                if tmp[i] == f:    #判断所带的数字是否和三带的数字一样
+                    i += 1
+                    continue
+                patterns['three_ones'].append(({f: patterns['threes'][f]}, {tmp[i]: i}))
                 i += 1
     if patterns['threes'] and len(patterns['twos']) > 0:
         for f in patterns['threes'].keys():
@@ -192,43 +195,33 @@ def pattern_spot(in_cards):
                                               {tmp[i]: patterns['twos'][tmp[i]]}))
                 i += 1
     """找到飞机带翅膀"""
-    if patterns['straights_triple'] and len(patterns['ones']) > 1:
-        for st in patterns['straights_triple']:
-            tmp = list(patterns['ones'].keys())
-            st_keys = list(st.keys())
-            for st_key in st_keys:
-                if st_key in tmp:
-                    tmp.remove(st_key)
-            if len(tmp) < len(st):
-                continue
+    for striple in patterns['straights_triple']:
+        striple_num = list(striple.keys())
+        striple_num.sort()
+        with_num = ['ones', 'twos']
+        for s in with_num:
+            threes_with = 'three_' + s
+            st_with = 'st_with_' + s
+            st3_with = 'st3_with_' + s
+            st4_with = 'st4_with_' + s
             i = 0
-            while i < len(tmp) - 1:
+            while i < len(striple_num) - 1:
                 j = i + 1
-                while j < len(tmp):
-                    patterns['st_with_ones'].append((st,
-                                                      {tmp[i]: patterns['ones'][tmp[i]]},
-                                                      {tmp[j]: patterns['ones'][tmp[j]]}))
+                while j < len(striple_num):
+                    tmp_list = [{striple_num[i]: striple[striple_num[i]]}, {striple_num[j]: striple[striple_num[j]]}]
+                    attach_list = [tw[1] for tw in patterns[threes_with] if
+                                   tw[0] in tmp_list and list(tw[1].keys())[0] not in [striple_num[i], striple_num[j]]]
+                    ii = 0
+                    while ii < len(attach_list) - 1:
+                        jj = ii + 1
+                        while jj < len(attach_list):
+                            if attach_list[ii] != attach_list[jj]:
+                                patterns[st_with].append(tmp_list + [attach_list[ii], attach_list[jj]])
+                            jj += 1
+                        ii += 1
                     j += 1
                 i += 1
-    if patterns['straights_triple'] and len(patterns['twos']) > 1:
-        for st in patterns['straights_triple']:
-            tmp = list(patterns['twos'].keys())
-            st_keys = list(st.keys())
-            for st_key in st_keys:
-                if st_key in tmp:
-                    tmp.remove(st_key)
-            if len(tmp) < len(st):
-                continue
-            i = 0
-            while i < len(tmp) - 1:
-                j = i + 1
-                while j < len(tmp):
-                    patterns['st_with_twos'].append((st,
-                                                      {tmp[i]: patterns['twos'][tmp[i]]},
-                                                      {tmp[j]: patterns['twos'][tmp[j]]}))
-                    j += 1
-                i += 1
-    """缺少连续3个三带带翅膀的情况"""
+    """其实少写了一种四个三带的飞机带四个对子的极端情况"""
     return patterns
 
 #验证所出的牌是否合理
@@ -369,12 +362,12 @@ def strategy(cards, in_cards):
 
 if __name__ == '__main__':
     # cards = poker_distribute()
-    tmp_cards = [12,11,14,23,23,23,33,32,31,54,65,85]
+    tmp_cards = [12,11,14,23,23,23,33,33,33,45,46,47,55,66,77,88]
     tmp_cards.sort()
     print(tmp_cards)
     patterns = pattern_spot(tmp_cards)
     print(json.dumps(patterns))
-    # with open('patterns', 'w', encoding='utf-8') as f:
-    #     for p in patterns:
-    #         s = p + ': ' + json.dumps(patterns[p]) + '\n'
-    #         f.write(s)
+    with open('patterns', 'w', encoding='utf-8') as f:
+        for p in patterns:
+            s = p + ': ' + json.dumps(patterns[p]) + '\n'
+            f.write(s)
