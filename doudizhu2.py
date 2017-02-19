@@ -82,7 +82,7 @@ def pattern_spot(in_cards):
                 else:
                     if straights_triple['count'] >= 2:
                         straights_triple['sn'] += 1
-                        straights_triple['cards'].append({})
+                        straights_triple['cards'].append([])
 
                     else:
                         straights_triple['cards'][straights_triple['sn']] = []
@@ -383,18 +383,112 @@ def cards_validate(cards):
 def strategy(cards, in_result):
     in_pattern = in_result['result']
     in_nums = in_result['nums'][0]
-    ln = len(in_nums)
+    if in_result['nums'][0] != 0:
+        ln = len(in_result['nums'])
     patterns = pattern_spot(cards)
     nums = [int(i/10) for i in cards]
     bigger = False
-    if not in_result['validate']:
-        print("亲，打错牌了吧！")
-        return False
+    def st3_with_twos(nums, patterns):
+        n = patterns[0]
+        n1 = patterns[3]
+        n2 = patterns[4]
+        n3 = patterns[5]
+        return [{n: nums.index(n)}, {n: nums.index(n) + 1}, {n: nums.index(n) + 2},
+                {n + 1: nums.index(n + 1)}, {n + 1: nums.index(n + 1) + 1}, {n + 1: nums.index(n + 1) + 2},
+                {n + 2: nums.index(n + 2)}, {n + 2: nums.index(n + 2) + 1},
+                {n + 2: nums.index(n + 2) + 2},
+                {n1: nums.index(n1)}, {n1: nums.index(n1) + 1},
+                {n2: nums.index(n2)}, {n2: nums.index(n2) + 1},
+                {n3: nums.index(n3)}, {n3: nums.index(n3) + 1}]
+    def st3_with_ones(nums, patterns):
+        n = patterns[0]
+        n1 = patterns[3]
+        n2 = patterns[4]
+        n3 = patterns[5]
+        return [{n: nums.index(n)}, {n: nums.index(n) + 1}, {n: nums.index(n) + 2},
+                {n + 1: nums.index(n + 1)}, {n + 1: nums.index(n + 1) + 1}, {n + 1: nums.index(n + 1) + 2},
+                {n + 2: nums.index(n + 2)}, {n + 2: nums.index(n + 2) + 1},
+                {n + 2: nums.index(n + 2) + 2},
+                {n1: nums.index(n1)}, {n2: nums.index(n2)}, {n3: nums.index(n3)}]
+    def st_with_twos(nums, patterns):
+        n = patterns[0]
+        n1 = patterns[2]
+        n2 = patterns[3]
+        return [{n: nums.index(n)}, {n: nums.index(n) + 1}, {n: nums.index(n) + 2},
+                {n + 1: nums.index(n + 1)}, {n + 1: nums.index(n + 1) + 1}, {n + 1: nums.index(n + 1) + 2},
+                {n1: nums.index(n1)}, {n1: nums.index(n1) + 1},
+                {n2: nums.index(n2)}, {n2: nums.index(n2) + 1}]
+    def st_with_ones(nums, patterns):
+        n = patterns[0]
+        n1 = patterns[2]
+        n2 = patterns[3]
+        return [{n: nums.index(n)}, {n: nums.index(n) + 1}, {n: nums.index(n) + 2},
+                {n + 1: nums.index(n + 1)}, {n + 1: nums.index(n + 1) + 1}, {n + 1: nums.index(n + 1) + 2},
+                {n1: nums.index(n1)}, {n2: nums.index(n2)}]
+    def three_twos(nums, patterns):
+        n = patterns[0]
+        n1 = patterns[1]
+        return [{n: nums.index(n)}, {n: nums.index(n) + 1}, {n: nums.index(n) + 2},
+                {n1: nums.index(n1)}, {n1: nums.index(n1) + 1}]
+    def three_ones(nums, patterns):
+        n = patterns[0]
+        n1 = patterns[1]
+        return [{n: nums.index(n)}, {n: nums.index(n) + 1}, {n: nums.index(n) + 2},
+                {n1: nums.index(n1)}]
+    if in_result['nums'][0] == 0 and in_result['result'] == 'null':
+        if patterns['st3_with_twos']:
+            return st3_with_twos(nums, patterns['st3_with_twos'][0])
+        if patterns['st3_with_ones']:
+            return st3_with_ones(nums, patterns['st3_with_ones'][0])
+        if patterns['st_with_twos']:
+            return st_with_twos(nums, patterns['st_with_twos'][0])
+        if patterns['st_with_ones']:
+            return st_with_ones(nums, patterns['st_with_ones'][0])
+        if patterns['straights_triple']:
+            result = []
+            tmp = patterns['straights_triple'][0]
+            for i in range(len(tmp)):
+                result.append({tmp[i]: nums.index(tmp[i])})
+                result.append({tmp[i]: nums.index(tmp[i]) + 1})
+                result.append({tmp[i]: nums.index(tmp[i]) + 2})
+            return result
+        if patterns['straights_double']:
+            result = []
+            tmp = patterns['straights_double'][0]
+            for i in range(len(tmp)):
+                result.append({tmp[i]: nums.index(tmp[i])})
+                result.append({tmp[i]: nums.index(tmp[i]) + 1})
+            return result
+        if patterns['straights']:
+            result = []
+            tmp = patterns['straights'][0]
+            for i in range(len(tmp)):
+                result.append({tmp[i]: nums.index(tmp[i])})
+            return result
+        if patterns['three_twos']:
+            return three_twos(nums, patterns['three_twos'][0])
+        if patterns['three_ones']:
+            return three_ones(nums, patterns['three_ones'][0])
+        if patterns['threes']:
+            for i in range(len(patterns['threes'])):
+                n = patterns['threes'][i]
+                if n not in patterns['fours']:
+                    return [{n: nums.index(n)}, {n: nums.index(n) + 1}, {n: nums.index(n) + 2}]
+        if patterns['twos']:
+            for i in range(len(patterns['twos'])):
+                n = patterns['twos'][i]
+                if n not in patterns['threes']:
+                    return [{n: nums.index(n)}, {n: nums.index(n) + 1}]
+        if patterns['ones']:
+            for i in range(len(patterns['ones'])):
+                n = patterns['ones'][i]
+                if n not in patterns['twos']:
+                    return [{n: nums.index(n)}]
     if len(cards) == 0:
         print('无牌可打了!')
         return False
     if in_pattern == 'two_jokers':
-        return 'pass'
+        return False
     elif in_pattern == 'fours' or in_pattern == 'four_two_ones' or in_pattern == 'four_two_twos':
         if patterns['fours']:
             for n in patterns['fours']:
@@ -447,84 +541,56 @@ def strategy(cards, in_result):
                         if n > in_nums:
                             result = []
                             for i in range(ln):
-                                result.append({to[i], nums.index(to[i])})
+                                result.append({to[i]: nums.index(to[i])})
                             return result
                         elif in_nums + ln -1 < to[-1]:
                             result = []
                             for i in range(ln):
-                                result.append({in_nums + 1, nums.index(in_nums + 1)})
+                                result.append({in_nums + i: nums.index(in_nums + i)})
                             return result
                 elif in_pattern == 'straights_double':
                     if len(to) >= ln:
                         if n > in_nums:
                             result = []
                             for i in range(ln):
-                                result.append({to[i], nums.index(to[i])})
-                                result.append({to[i], nums.index(to[i]) + 1})
+                                result.append({to[i]: nums.index(to[i])})
+                                result.append({to[i]: nums.index(to[i]) + 1})
                             return result
                         elif in_nums + ln -1 < to[-1]:
                             result = []
                             for i in range(ln):
-                                result.append({in_nums + 1, nums.index(in_nums + 1)})
-                                result.append({in_nums + 1, nums.index(in_nums + 1) + 1})
+                                result.append({in_nums + i: nums.index(in_nums + i)})
+                                result.append({in_nums + i: nums.index(in_nums + i) + 1})
                             return result
                 elif in_pattern == 'straights_triple':
                     if len(to) >= ln:
                         if n > in_nums:
                             result = []
                             for i in range(ln):
-                                result.append({to[i], nums.index(to[i])})
-                                result.append({to[i], nums.index(to[i]) + 1})
-                                result.append({to[i], nums.index(to[i]) + 2})
+                                result.append({to[i]: nums.index(to[i])})
+                                result.append({to[i]: nums.index(to[i]) + 1})
+                                result.append({to[i]: nums.index(to[i]) + 2})
                             return result
                         elif in_nums + ln -1 < to[-1]:
                             result = []
                             for i in range(ln):
-                                result.append({in_nums + 1, nums.index(in_nums + 1)})
-                                result.append({in_nums + 1, nums.index(in_nums + 1) + 1})
-                                result.append({in_nums + 1, nums.index(in_nums + 1) + 2})
+                                result.append({in_nums + i: nums.index(in_nums + i)})
+                                result.append({in_nums + i: nums.index(in_nums + i) + 1})
+                                result.append({in_nums + i: nums.index(in_nums + i) + 2})
                             return result
                 if n > in_nums:
                     if in_pattern == 'threes_ones':
-                        return [{n: nums.index(n)}, {n: nums.index(n)+ 1},
-                                {n: nums.index(n) + 2}, {to[1]: nums.index(to[1])}]
+                        return three_ones(nums, to)
                     elif in_pattern == 'three_twos':
-                        return [{n: nums.index(n)}, {n: nums.index(n)+ 1}, {n: nums.index(n) + 2},
-                            {to[1]: nums.index(to[1])}, {to[1]: nums.index(to[1]) + 1}]
+                        return three_twos(nums, to)
                     elif in_pattern == 'st_with_ones':
-                        n1 = to[2]
-                        n2 = to[3]
-                        return [{n: nums.index(n)}, {n: nums.index(n)+ 1}, {n: nums.index(n) + 2},
-                                {n + 1: nums.index(n+1)}, {n+1: nums.index(n+1) + 1}, {n+1: nums.index(n+1) + 2},
-                                {n1: nums.index(n1)}, {n2: nums.index(n2)}]
-                    elif in_pattern == 'st_with_ones':
-                        n1 = to[2]
-                        n2 = to[3]
-                        return [{n: nums.index(n)}, {n: nums.index(n)+ 1}, {n: nums.index(n) + 2},
-                                {n + 1: nums.index(n+1)}, {n+1: nums.index(n+1) + 1}, {n+1: nums.index(n+1) + 2},
-                                {n1: nums.index(n1)}, {n1: nums.index(n1)+1},
-                                {n2: nums.index(n2)}, {n2: nums.index(n2)+1}]
+                        return st_with_ones(nums, to)
+                    elif in_pattern == 'st_with_twos':
+                        return st_with_twos(nums, to)
                     elif in_pattern == 'st3_with_ones':
-                        n1 = to[3]
-                        n2 = to[4]
-                        n3 = to[5]
-                        return [{n: nums.index(n)}, {n: nums.index(n)+ 1}, {n: nums.index(n) + 2},
-                                {n + 1: nums.index(n+1)}, {n+1: nums.index(n+1) + 1}, {n+1: nums.index(n+1) + 2},
-                                {n + 2: nums.index(n + 2)}, {n + 2: nums.index(n + 2) + 1},
-                                {n + 2: nums.index(n + 2) + 2},
-                                {n1: nums.index(n1)}, {n2: nums.index(n2)}, {n3: nums.index(n3)}]
+                        return st3_with_ones(nums, to)
                     elif in_pattern == 'st3_with_twos':
-                        n1 = to[3]
-                        n2 = to[4]
-                        n3 = to[5]
-                        return [{n: nums.index(n)}, {n: nums.index(n)+ 1}, {n: nums.index(n) + 2},
-                                {n + 1: nums.index(n+1)}, {n+1: nums.index(n+1) + 1}, {n+1: nums.index(n+1) + 2},
-                                {n + 2: nums.index(n + 2)}, {n + 2: nums.index(n + 2) + 1},
-                                {n + 2: nums.index(n + 2) + 2},
-                                {n1: nums.index(n1)}, {n1: nums.index(n1)+1},
-                                {n2: nums.index(n2)}, {n2: nums.index(n2)+1},
-                                {n3: nums.index(n3)}, {n3: nums.index(n3)+1}]
-
+                        return st3_with_twos(nums, to)
     if patterns['fours'] and in_pattern != 'fours':
         n = patterns['fours'][0]
         return [{n: nums.index(n)}, {n: nums.index(n) + 1}, {n: nums.index(n) + 2}, {n: nums.index(n) + 3}]
@@ -533,9 +599,9 @@ def strategy(cards, in_result):
     else:
         return False
 
-def compare(card_a, card_b):
-    a = cards_validate(card_a)
-    b = cards_validate(card_b)
+def compare(a, b):
+    if a['nums'] == [0] and a['result'] == 'null':
+        return True
     if b['result'] == 'two_jokers':
         return True
     elif b['result'] == 'fours' and a['result'] != 'fours':
@@ -543,25 +609,88 @@ def compare(card_a, card_b):
     else:
         return a['nums'][0] < b['nums'][0]
 
+def rearrange(cards, position):
+    if not position:
+        return cards
+    for i in range(len(cards)):
+        if i in position:
+            cards[i] = 0
+    c = cards.count(0)
+    for i in range(c):
+        cards.remove(0)
+    return cards
+
 def play(n):
     players_cards = poker_distribute()
     players = [0, 1, 2]
     patterns = []
     scores = []
+    person = []
+    for i in range(3):
+        if i < n:
+            person.append(1)
+        else:
+            person.append(0)
     for player in players:
         patterns.append(pattern_spot(players_cards[player]))
-    if n == 0:
-        if patterns[0]['two_jokers']:
+    # 开始叫分
+    for i in range(3):
+        if person[i]:
+            print(str(i+1) + '号玩家，您的牌是: ' + ''.join(str(players_cards[players[0]])))
+            scores.append(int(input('请叫分(1-3):')))
+        else:
+            if patterns[players[i]]['two_jokers'] or patterns[players[i]]['fours']:
+                scores.append(3)
+            elif 14 in patterns[players[i]]['ones']:
+                scores.append(2)
+            else:
+                scores.append(1)
+    dizhu = scores.index(max(scores))
+    players_cards[dizhu] += players_cards[3]
+    print('地主是' + str(dizhu+1) + '号玩家！')
+    finished = False
+    last_result = {'validate': True, 'nums': [0], 'result': 'null'}
+    pass_me = [0, 0, 0]
+    i = dizhu
+    while not finished:
+        i = i % 3
+        if person[i]:
+            s = input('请出牌，输入牌序号，以空格分割， 如果不出请按0：')
+            s = s.split(' ')
+            position = []
+            for j in s:
+                position.append(int(j) - 1)
+            if position[0] == 0:
+                position = []
+                pass_me[i] = 1
+            else:
+                out_cards = [players_cards[i][j] for j in position]
+        else:
+            out = strategy(players_cards[i], last_result)
+            if not out:
+                pass_me[i] = 1
+                position = []
+            else:
+                out_cards = [list(t.keys())[0] for t in out]
+                position = [list(t.values())[0] for t in out]
+        if pass_me[i]:
             pass
-    if n == 1:
-        print('1号玩家，您的牌是: ' + ''.join(str(players_cards[players[0]])))
-        scores.append(int(input('请叫分(1-3):')))
-    elif n == 2:
-        print('2号玩家，您的牌是: ' + ''.join(str(players_cards[players[0]])))
-        scores.append(int(input('请叫分(1-3):')))
-
-
-
+        else:
+            if pass_me[(i-1)%3] and pass_me[(i-2)%3]:
+                last_result = {'validate': True, 'nums': [0], 'result': 'null'}
+            out_result = cards_validate(out_cards)
+            bigger = compare(last_result, out_result)
+            if out_result['validate']:
+                print(str(i+1) + '号玩家出的牌是' + ''.join(str(out_cards)))
+            elif not bigger:
+                print('您出的牌比上家小！')
+            else:
+                print('牌不合法')
+            players_cards[i] = rearrange(players_cards[i], position)
+            last_result = out_result
+            if len(players_cards[i]) == 0:
+                finished = True
+        i += 1
 
 if __name__ == '__main__':
     # cards = poker_distribute()
@@ -573,3 +702,4 @@ if __name__ == '__main__':
         for p in patterns:
             s = p + ': ' + json.dumps(patterns[p]) + '\n'
             f.write(s)
+    play(0)
