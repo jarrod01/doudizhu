@@ -533,8 +533,34 @@ def strategy(cards, in_result):
     else:
         return False
 
+def compare(card_a, card_b):
+    a = cards_validate(card_a)
+    b = cards_validate(card_b)
+    if b['result'] == 'two_jokers':
+        return True
+    elif b['result'] == 'fours' and a['result'] != 'fours':
+        return True
+    else:
+        return a['nums'][0] < b['nums'][0]
+
 def play(n):
-    pass
+    players_cards = poker_distribute()
+    players = [0, 1, 2]
+    patterns = []
+    scores = []
+    for player in players:
+        patterns.append(pattern_spot(players_cards[player]))
+    if n == 0:
+        if patterns[0]['two_jokers']:
+            pass
+    if n == 1:
+        print('1号玩家，您的牌是: ' + ''.join(str(players_cards[players[0]])))
+        scores.append(int(input('请叫分(1-3):')))
+    elif n == 2:
+        print('2号玩家，您的牌是: ' + ''.join(str(players_cards[players[0]])))
+        scores.append(int(input('请叫分(1-3):')))
+
+
 
 
 if __name__ == '__main__':
