@@ -685,6 +685,8 @@ def play(n):
             if person[i]:
                 print('\n' + str(i + 1) + '号玩家，您的牌是： ' + print_cards(players_cards[i]) + '\n没有牌能够大过上家， 5秒后下家出牌！')
                 time.sleep(5)
+            else:
+                time.sleep(randint(1, 2)) #机器假装思考
         else:
             pass_me[i] = 0 #先把pass设为0，如果用户选择pass再设为1
             if person[i]:
@@ -714,6 +716,8 @@ def play(n):
                 except:
                     print('输入有误，请重新输入：')
                     continue
+            else:
+                time.sleep(randint(1, 3)) #机器假装思考
         out_cards = rearrange(players_cards[i], out_nums)
         #检测是否可以pass
         if not can_pass and pass_me[i]:
