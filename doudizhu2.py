@@ -1,11 +1,11 @@
 from random import randint
-import json
+import json, time
 
 def poker_distribute():
     pokers = []
     for i in range(1, 14):
         for j in range(1, 5):
-            pokers.append(i*10+j)
+            pokers.append(i*10+j) #以最后一位代表花色，前一位或两位代表数字
     pokers += [141, 142]
     player = {0: [], 1: [], 2: [], 3: []}
     for i in range(0, 51):
@@ -15,7 +15,7 @@ def poker_distribute():
     player[3] = pokers
     for p in player:
         player[p].sort()
-        print(str(p) + ': ' + ''.join(str(player[p])))
+        #print(str(p + 1) + ': ' + print_cards(player[p]))
     return player
 
 def pattern_spot(in_cards):
@@ -386,16 +386,46 @@ def strategy(cards, in_result):
     if in_result['nums'][0] != 0:
         ln = len(in_result['nums'])
     patterns = pattern_spot(cards)
-    nums = [int(i/10) for i in cards]
+    def st3_with_twos(patterns):
+        n = patterns[0]
+        n1 = patterns[3]
+        n2 = patterns[4]
+        n3 = patterns[5]
+        return [n, n, n, n+1, n+1, n+1, n+2, n+2, n+2, n1, n1, n2, n2, n3, n3]
+    def st3_with_ones(patterns):
+        n = patterns[0]
+        n1 = patterns[3]
+        n2 = patterns[4]
+        n3 = patterns[5]
+        return [n, n, n, n+1, n+1, n+1, n+2, n+2, n+2, n1, n2, n3]
+    def st_with_twos(patterns):
+        n = patterns[0]
+        n1 = patterns[2]
+        n2 = patterns[3]
+        return [n, n, n, n+1, n+1, n+1, n1, n1, n2, n2]
+    def st_with_ones(patterns):
+        n = patterns[0]
+        n1 = patterns[2]
+        n2 = patterns[3]
+        return [n, n, n, n+1, n+1, n+1, n1, n2]
+    def three_twos(patterns):
+        n = patterns[0]
+        n1 = patterns[1]
+        return [n, n, n, n1, n1]
+    def three_ones(patterns):
+        n = patterns[0]
+        n1 = patterns[1]
+        return [n, n, n, n1]
+    """当第一个出牌的时候或者对方大不了自己出牌的时候的策略"""
     if in_result['nums'][0] == 0 and in_result['result'] == 'null':
         if patterns['st3_with_twos']:
-            return patterns['st3_with_twos'][0]
+            return st3_with_twos(patterns['st3_with_twos'][0])
         if patterns['st3_with_ones']:
-            return patterns['st3_with_ones'][0]
+            return st3_with_ones(patterns['st3_with_ones'][0])
         if patterns['st_with_twos']:
-            return patterns['st_with_twos'][0]
+            return st_with_twos(patterns['st_with_twos'][0])
         if patterns['st_with_ones']:
-            return patterns['st_with_ones'][0]
+            return st_with_ones(patterns['st_with_ones'][0])
         if patterns['straights_triple']:
             result = []
             tmp = patterns['straights_triple'][0]
@@ -415,9 +445,9 @@ def strategy(cards, in_result):
                 result.append(tmp[i])
             return result
         if patterns['three_twos']:
-            return patterns['three_twos'][0]
+            return three_twos(patterns['three_twos'][0])
         if patterns['three_ones']:
-            return patterns['three_ones'][0]
+            return three_ones(patterns['three_ones'][0])
         if patterns['fours'] and len(cards) == 4:
             n = cards[0]
             return [n] * 4
@@ -440,9 +470,9 @@ def strategy(cards, in_result):
                     return [n]
     if len(cards) == 0:
         print('无牌可打了!')
-        return False
+        return []
     if in_pattern == 'two_jokers':
-        return False
+        return []
     elif in_pattern == 'fours':
         if patterns['fours']:
             for n in patterns['fours']:
@@ -452,6 +482,7 @@ def strategy(cards, in_result):
         if patterns['fours']:
             n = patterns['fours']
             return [n] * 4
+    #当出单的时候尽量不破坏对子，以下同理
     elif in_pattern == 'ones':
         tmp = patterns['ones'].copy()
         for n in patterns['ones']:
@@ -494,6 +525,8 @@ def strategy(cards, in_result):
         if patterns[in_pattern]:
             for to in patterns[in_pattern]:
                 n = to[0]
+                # 根据情况判断链子，如果第一个数大于对方的第一个数字，就取第一个，否则如果对方最后一个数字
+                # 小于我方最后一个数字，则取对方第一个数字加1
                 if in_pattern == 'straights':
                     if len(to) >= ln:
                         if n > in_nums:
@@ -523,59 +556,85 @@ def strategy(cards, in_result):
                         if n > in_nums:
                             result = []
                             for i in range(ln):
-                                result += [to[i]] * 2
+                                result += [to[i]] * 3
                             return result
                         elif in_nums + ln -1 < to[-1]:
                             result = []
                             for i in range(1, ln + 1):
-                                result += [in_nums + 1] * 2
+                                result += [in_nums + 1] * 3
                             return result
                 if n > in_nums:
-                    if in_pattern == 'threes_ones':
-                        return to
+                    if in_pattern == 'three_ones':
+                        return three_ones(to)
                     elif in_pattern == 'three_twos':
-                        return to
+                        return three_twos(to)
                     elif in_pattern == 'st_with_ones':
-                        return to
+                        return st_with_ones(to)
                     elif in_pattern == 'st_with_twos':
-                        return to
+                        return st_with_twos(to)
                     elif in_pattern == 'st3_with_ones':
-                        return to
+                        return st3_with_ones(to)
                     elif in_pattern == 'st3_with_twos':
-                        return to
+                        return st3_with_twos(to)
     if patterns['fours'] and in_pattern != 'fours':
         n = patterns['fours'][0]
         return [n] * 4
     if patterns['two_jokers']:
         return [14, 14]
     else:
-        return False
+        return []
 
 def compare(a, b):
     if a['nums'] == [0] and a['result'] == 'null':
         return True
+    if not ( b['validate'] and a['validate']):
+        return False
     if b['result'] == 'two_jokers':
         return True
     elif b['result'] == 'fours' and a['result'] != 'fours' and a['result'] != 'two_jokers':
         return True
-    else:
+    elif a['result'] == b['result']:
         return a['nums'][0] < b['nums'][0]
+    else:
+        return False
 
 def rearrange(cards, nums):
     if not nums:
-        return [cards, []]
+        return []
     nums = list(nums)
     tmp = [int(i/10) for i in cards]
     out_cards = []
     for i in range(len(cards)):
         if tmp[i] in nums:
             out_cards.append(cards[i])
-            cards[i] = 0
             nums.remove(tmp[i])
-    c = cards.count(0)
-    for i in range(c):
-        cards.remove(0)
-    return [cards, out_cards]
+    return out_cards
+
+def print_cards(cards):
+    colors = ['♥', '♠', '♦', '♣']
+    new_cards = []
+    for card in cards:
+        n = int(card / 10)
+        f = card % 10
+        if n < 9:
+            new_cards.append(str(n + 2) + colors[f - 1])
+        elif n == 9:
+            new_cards.append('J' + colors[f - 1])
+        elif n == 10:
+            new_cards.append('Q' + colors[f - 1])
+        elif n == 11:
+            new_cards.append('K' + colors[f - 1])
+        elif n == 12:
+            new_cards.append('A' + colors[f - 1])
+        elif n == 13:
+            new_cards.append('2' + colors[f - 1])
+        elif n == 14 and f == 1:
+            new_cards.append('JokerI')
+        elif n == 14 and f == 2:
+            new_cards.append('JokerII')
+    s = ' '.join(new_cards)
+    return s
+
 
 def play(n):
     players_cards = poker_distribute()
@@ -593,7 +652,7 @@ def play(n):
     for i in range(3):
         if person[i]:
             print(str(i+1) + '号玩家，您的牌是: ')
-            print(players_cards[i])
+            print(print_cards(players_cards[i]))
             scores.append(int(input('请叫分(1-3分):')))
         else:
             if patterns[i]['two_jokers'] or patterns[i]['fours']:
@@ -602,41 +661,73 @@ def play(n):
                 scores.append(2)
             else:
                 scores.append(1)
+    print('底牌是： ' + print_cards(players_cards[3]))
     dizhu = scores.index(max(scores))
     players_cards[dizhu] += players_cards[3]
     players_cards[dizhu].sort()
     print('地主是' + str(dizhu+1) + '号玩家！')
     finished = False
-    last_result = {'validate': True, 'nums': [0], 'result': 'null'}
-    pass_me = [0, 0, 0]
+    pass_me = [1, 1, 1]
     i = dizhu
+    can_pass = False
     while not finished:
         i = i % 3
-        if person[i]:
-            s = input('请出牌，输入牌，以空格分割， 如果不出请按0：')
-            s = s.split(' ')
-            out_cards = [int(j) - 1 for j in s]
-            players_cards[i], out_cards = rearrange(players_cards[i], out_cards)
-            if out_cards[0] == 0:
-                out_cards = []
-                pass_me[i] = 1
+        # 如果上家和下家都没有出牌，则将对比的last_result初始化
+        if pass_me[(i - 1) % 3] and pass_me[(i - 2) % 3]:
+            last_result = {'validate': True, 'nums': [0], 'result': 'null'}
+            can_pass = False
         else:
-            if pass_me[(i-1)%3] and pass_me[(i-2)%3]:
-                last_result = {'validate': True, 'nums': [0], 'result': 'null'}
-            out_cards = strategy(players_cards[i], last_result)
-            players_cards[i], out_cards = rearrange(players_cards[i], out_cards)
-            if not out_cards:
-                pass_me[i] = 1
-                out_cards = []
-
+            can_pass = True
+        # 机器先算出来可不可以大过
+        out_nums = strategy(players_cards[i], last_result)
+        if not out_nums:
+            pass_me[i] = 1
+            if person[i]:
+                print('\n' + str(i + 1) + '号玩家，您的牌是： ' + print_cards(players_cards[i]) + '\n没有牌能够大过上家， 5秒后下家出牌！')
+                time.sleep(5)
+        else:
+            pass_me[i] = 0 #先把pass设为0，如果用户选择pass再设为1
+            if person[i]:
+                print('\n' + str(i + 1) + '号玩家，您的牌是： ' + print_cards(players_cards[i]))
+                s = input('请出牌，输入牌，以空格分割， 如果不出请按回车：')
+                s = s.strip()
+                s = s.split(' ')
+                try:
+                    out_nums = []
+                    for n in s:
+                        if n == 'J' or n == 'j' or n == '11':
+                            out_nums.append(9)
+                        elif n == 'Q' or n == 'q' or n == '12':
+                            out_nums.append(10)
+                        elif n == 'K' or n == 'k' or n == '13':
+                            out_nums.append(11)
+                        elif n == 'A' or n == 'a' or n == '1':
+                            out_nums.append(12)
+                        elif n == '2':
+                            out_nums.append(13)
+                        elif 'joker' in n.lower() or n == '14':
+                            out_nums.append(14)
+                        elif n in ['3', '4', '5', '6', '7', '8', '9', '10']:
+                            out_nums.append(int(n) - 2)
+                    if not out_nums:
+                        pass_me[i] = 1
+                except:
+                    print('输入有误，请重新输入：')
+                    continue
+        out_cards = rearrange(players_cards[i], out_nums)
+        #检测是否可以pass
+        if not can_pass and pass_me[i]:
+            print(str(i + 1) + '号玩家，您不能跳过出牌！')
+            continue
         if pass_me[i]:
             print(str(i + 1) + '号玩家过！')
         else:
             out_result = cards_validate(out_cards)
             bigger = compare(last_result, out_result)
             if bigger and out_result['validate']:
-                print(str(i+1) + '号玩家出的牌是' + ''.join(str(out_cards)))
-
+                print(str(i+1) + '号玩家出的牌是' + print_cards(out_cards))
+                for card in out_cards:
+                    players_cards[i].remove(card)
                 last_result = out_result
                 if len(players_cards[i]) == 0:
                     print(str(i + 1) + '号玩家胜！')
@@ -645,26 +736,24 @@ def play(n):
                 print('牌不合法')
                 continue
             else:
-                print('您出的牌比上家小！')
+                print('您出的牌比上家小，或者牌型和上家不一样！')
                 continue
         i += 1
 
 if __name__ == '__main__':
-    cards = [12, 13, 22, 24, 25]
-    tmp_cards = [12, 14, 21, 24, 33, 41, 52, 62, 72, 82, 92, 93, 102, 103, 112, 121, 122, 123, 124, 132]
-    tmp_cards.sort()
-    cards = rearrange(tmp_cards, [1,1,2,10])
-    print(cards)
-    #cards_validate(out)
     play(0)
+    # cards = [12, 13, 22, 24, 25]
+    # tmp_cards = [11, 23, 24, 31, 53, 61, 62, 63, 73, 94, 101, 104, 112, 131, 133, 141, 142]
+    # tmp_cards.sort()
+    # cards = rearrange(tmp_cards, [1,1,2,10])
     # print(tmp_cards)
-    # patterns = pattern_spot(tmp_cards)
+    #patterns = pattern_spot(tmp_cards)
     # print(json.dumps(patterns))
     # with open('patterns', 'w', encoding='utf-8') as f:
     #     for p in patterns:
     #         s = p + ': ' + json.dumps(patterns[p]) + '\n'
     #         f.write(s)
-    # a = {'validate': True, 'nums': [1, 2, 3], 'result': 'st3_with_twos'}
+    # a = {'validate': True, 'nums': [0], 'result': 'null'}
     # result = strategy(tmp_cards, a)
     # print(result)
     # b = {'validate': True, 'nums': [13, 2], 'result': 'three_ones'}
