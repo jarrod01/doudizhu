@@ -880,8 +880,13 @@ def detect_user():
             if not addr:
                 addr = input('输入有误，请重新输入\n开房间请按1，加入房间请输入房间号：')
             elif addr == '1':
+                s2 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s2.connect(('114.114.114.114',80))
+                addr, port = s2.getsockname()
+                s2.close()
                 correct = True
-                s.bind(('192.168.1.105', 9125))
+                print('开房成功，您的房间号是：' + addr +', 快把房间号告诉玩伴吧')
+                s.bind((addr, 9125))
                 s.listen(2)
                 print('Waiting for connection...')
                 if n == 2:
@@ -935,7 +940,7 @@ def detect_user():
                                 sockets[i].send(b'replay')
                                 replay2.append(sockets[i].recv(1024).decode('utf-8'))
                             if 'x' not in replay2[0] and 'x' not in replay2[1]:
-                                play(2, (0, sockets[0], sockets[1]), name)
+                                play(3, (0, sockets[0], sockets[1]), name)
                                 replay = input('重玩请按回车，退出请按exit：')
                             elif 'x' in replay2[0] and 'x' not in replay2[1]:
                                 send_data('2号玩家退出游戏', sockets[1])
