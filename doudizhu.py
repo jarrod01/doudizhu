@@ -375,7 +375,6 @@ def cards_validate(cards):
         validate = False
     return {'validate': validate, 'result': result, 'nums': nums}
 
-
 def strategy(cards, in_result):
     in_pattern = in_result['result']
     in_nums = in_result['nums'][0]
@@ -1002,6 +1001,7 @@ def detect_user():
                         break
 
         s.close()
+
 if __name__ == '__main__':
     detect_user()
     # cards = [14, 21, 141, 151]
