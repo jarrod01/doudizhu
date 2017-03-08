@@ -1,5 +1,5 @@
 from random import randint
-import json, time, socket, threading
+import json, time, socket, threading, struct
 
 def poker_distribute():
     pokers = []
@@ -868,9 +868,10 @@ def detect_user():
             n = 1
             correct = True
     if n == 0:
+        print('Three adroids with play with each other!')
         play(0)
     elif n == 1:
-        play(n)
+        play(n, host=name)
     elif n >= 2:
         correct = False
         addr = input('开房间请按1，加入房间请输入房间号：')
@@ -884,10 +885,13 @@ def detect_user():
                 addr, port = s2.getsockname()
                 s2.close()
                 correct = True
-                print('开房成功，您的房间号是：' + addr +', 快把房间号告诉玩伴吧')
+                addr = '127.0.0.1'
+                num_ip = socket.ntohl(struct.unpack("I", socket.inet_aton(addr))[0])
+                print('开房成功，您的房间号是：' + str(num_ip) +', 快把房间号告诉玩伴吧')
                 s.bind((addr, 9125))
                 s.listen(2)
                 print('Waiting for connection...')
+                # 2个人的情况，主机等待另外一名玩家接入
                 if n == 2:
                     sock, addr = s.accept()
                     print('收到来自' + addr[0] + '的连接')
@@ -956,7 +960,8 @@ def detect_user():
                     sockets[0].close()
                     sockets[1].close()
             else:
-                s.connect((addr, 9125))
+                ip = socket.inet_ntoa(struct.pack('I', socket.htonl(int(addr))))
+                s.connect((ip, 9125))
                 finished = False
                 while not finished:
                     data = s.recv(1024).decode('utf-8')
