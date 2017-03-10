@@ -676,7 +676,7 @@ def play(n, sockets = (0, 0, 0), host = ''):
     for i in range(3):
         patterns.append(pattern_spot(players_cards[i]))
         if person[i] == 1:
-            print(names[i] + '您的牌是: ')
+            print(names[i] + '，您的牌是: ')
             print(print_cards(players_cards[i]))
             scores.append(int(input('请叫分(1-3分):')))
             print('等待其他玩家叫分……')
@@ -872,6 +872,13 @@ def detect_user():
         play(0)
     elif n == 1:
         play(n, host=name)
+        replay = input('重玩请按回车，否则键入exit：')
+        if 'x' in replay or 'no' in replay:
+            replay = False
+        else:
+            replay = True
+        while replay:
+            play(n, host=name)
     elif n >= 2:
         correct = False
         addr = input('开房间请按1，加入房间请输入房间号：')
