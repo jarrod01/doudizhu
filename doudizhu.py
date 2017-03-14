@@ -850,6 +850,89 @@ def play(n, sockets = (0, 0, 0), host = ''):
                 continue
         i += 1
 
+def android_play(n=0, sockets = (0, 0, 0), host = ''):
+    players_cards = poker_distribute()
+    patterns = []
+    scores = []
+    names = [host, '', '']
+    ai_names = ['Harry', 'Ron', 'Hermione', 'Albus', 'Severus', 'Minerva', 'Hagrid', 'Lupin', 'Moody', 'Horace', 'Filius',
+                'Dom', 'Brian', 'Mia', 'Letty']
+    #判断是服务器还是客户机
+    person = [0, 0, 0]
+    # 开始叫分
+    for i in range(3):
+        patterns.append(pattern_spot(players_cards[i]))
+        names[i] = ai_names[randint(0, len(ai_names)-1)]
+        ai_names.remove(names[i])
+        if patterns[i]['two_jokers'] or patterns[i]['fours']:
+            scores.append(3)
+        elif 14 in patterns[i]['ones']:
+            scores.append(2)
+        else:
+            scores.append(1)
+    dizhu = scores.index(max(scores))
+    players_cards[dizhu] += players_cards[3]
+    players_cards[dizhu].sort()
+    data = '底牌是：' + print_cards(players_cards[3]) + '\n' + '地主是: ' + names[dizhu]
+    print(data)
+    finished = False
+    pass_me = [1, 1, 1]
+    i = dizhu
+    can_pass = False
+    while not finished:
+        i = i % 3
+        # 如果上家和下家都没有出牌，则将对比的last_result初始化
+        if pass_me[(i - 1) % 3] and pass_me[(i - 2) % 3]:
+            print('\n')
+            last_result = {'validate': True, 'nums': [0], 'result': 'null'}
+            can_pass = False
+        else:
+            can_pass = True
+        # 机器先算出来可不可以大过
+        out_nums = strategy(players_cards[i], last_result)
+        if not out_nums:
+            pass_me[i] = 1
+        else:
+            pass_me[i] = 0
+        # 如果上家是地主，对家出牌的时候不压
+        if (i -1 ) % 3 == dizhu and pass_me[dizhu] and not pass_me[(i-2)%3] and not person[i]:
+            out_nums = []
+            pass_me[i] = 1
+        # 如果上家是对家，且出了大牌，那么不压
+        if i != dizhu and (i - 1) % 3 != dizhu and last_result['nums'][0] in [13, 14] and not pass_me[(i-1)%3] and not person[i]:
+            out_nums = []
+            pass_me[i] = 1
+        out_cards = rearrange(players_cards[i], out_nums)
+        #检测是否可以pass
+        if not can_pass and pass_me[i]:
+            continue
+        if pass_me[i]:
+            print(names[i] + '过！')
+        else:
+            out_result = cards_validate(out_cards)
+            bigger = compare(last_result, out_result)
+            if bigger and out_result['validate']:
+                print(names[i] + '出的牌是' + print_cards(out_cards))
+                for card in out_cards:
+                    players_cards[i].remove(card)
+                last_result = out_result
+                if len(players_cards[i]) == 0:
+                    finished = True
+                    if i == dizhu:
+                        data = '地主胜！'
+                        winner = 'dizhu'
+                    else:
+                        data = '农民胜!'
+                        winner = 'nongmin'
+                    print(data)
+                    return winner
+
+            else:
+                if person[i] == 1:
+                    print('出牌不合法')
+                continue
+        i += 1
+
 def detect_user():
     name = input('欢迎试玩斗地主，Jarrod出品\n请输入您的名字：')
     is_multi_players = input('玩单机版请直接回车，否则请输入玩家个数：')
@@ -1015,7 +1098,12 @@ def detect_user():
         s.close()
 
 if __name__ == '__main__':
-    detect_user()
+    count = {'nongmin': 0, 'dizhu':0}
+    for i in range(10000):
+        winner = android_play()
+        count[winner] += 1
+    print('地主胜: ' + str(count['dizhu']))
+    #detect_user()
     # cards = [14, 21, 141, 151]
     # in_result = {'validate': True, 'nums': [1], 'result': 'ones'}
     # result = strategy(cards, in_result)
