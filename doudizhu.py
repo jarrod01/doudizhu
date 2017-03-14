@@ -546,7 +546,7 @@ def strategy(cards, in_result):
                         elif in_nums + ln -1 < to[-1]:
                             result = []
                             for i in range(1, ln+1):
-                                result += [in_nums + 1] * 2
+                                result += [in_nums + i] * 2
                             return result
                 elif in_pattern == 'straights_triple':
                     if len(to) >= ln:
@@ -558,7 +558,7 @@ def strategy(cards, in_result):
                         elif in_nums + ln -1 < to[-1]:
                             result = []
                             for i in range(1, ln + 1):
-                                result += [in_nums + 1] * 3
+                                result += [in_nums + i] * 3
                             return result
                 if n > in_nums:
                     if in_pattern == 'three_ones':
@@ -873,8 +873,7 @@ def android_play(n=0, sockets = (0, 0, 0), host = ''):
     dizhu = scores.index(max(scores))
     players_cards[dizhu] += players_cards[3]
     players_cards[dizhu].sort()
-    data = '底牌是：' + print_cards(players_cards[3]) + '\n' + '地主是: ' + names[dizhu]
-    print(data)
+    # print('底牌是：' + print_cards(players_cards[3]) + '\n' + '地主是: ' + names[dizhu])
     finished = False
     pass_me = [1, 1, 1]
     i = dizhu
@@ -883,12 +882,11 @@ def android_play(n=0, sockets = (0, 0, 0), host = ''):
         i = i % 3
         # 如果上家和下家都没有出牌，则将对比的last_result初始化
         if pass_me[(i - 1) % 3] and pass_me[(i - 2) % 3]:
-            print('\n')
+            # print('\n')
             last_result = {'validate': True, 'nums': [0], 'result': 'null'}
             can_pass = False
         else:
             can_pass = True
-        # 机器先算出来可不可以大过
         out_nums = strategy(players_cards[i], last_result)
         if not out_nums:
             pass_me[i] = 1
@@ -907,12 +905,13 @@ def android_play(n=0, sockets = (0, 0, 0), host = ''):
         if not can_pass and pass_me[i]:
             continue
         if pass_me[i]:
-            print(names[i] + '过！')
+            # print(names[i] + '过！')
+            pass
         else:
             out_result = cards_validate(out_cards)
             bigger = compare(last_result, out_result)
             if bigger and out_result['validate']:
-                print(names[i] + '出的牌是' + print_cards(out_cards))
+                # print(names[i] + '出的牌是' + print_cards(out_cards))
                 for card in out_cards:
                     players_cards[i].remove(card)
                 last_result = out_result
@@ -924,12 +923,10 @@ def android_play(n=0, sockets = (0, 0, 0), host = ''):
                     else:
                         data = '农民胜!'
                         winner = 'nongmin'
-                    print(data)
+                    # print(data)
                     return winner
 
             else:
-                if person[i] == 1:
-                    print('出牌不合法')
                 continue
         i += 1
 
@@ -951,7 +948,7 @@ def detect_user():
             n = 1
             correct = True
     if n == 0:
-        print('Three adroids with play with each other!')
+        print('Test only! Three adroids with play with each other!')
         play(0)
     elif n == 1:
         play(n, host=name)
@@ -962,6 +959,8 @@ def detect_user():
             replay = True
         while replay:
             play(n, host=name)
+            if 'x' in replay or 'no' in replay:
+                replay = False
     elif n >= 2:
         correct = False
         addr = input('开房间请按1，加入房间请输入房间号：')
@@ -1098,13 +1097,25 @@ def detect_user():
         s.close()
 
 if __name__ == '__main__':
-    count = {'nongmin': 0, 'dizhu':0}
-    for i in range(10000):
-        winner = android_play()
-        count[winner] += 1
-    print('地主胜: ' + str(count['dizhu']))
-    #detect_user()
-    # cards = [14, 21, 141, 151]
-    # in_result = {'validate': True, 'nums': [1], 'result': 'ones'}
+    # 测试strategy
+    # cards = [32, 34, 43, 51, 52, 53, 72, 74, 81, 83, 93, 94, 101, 102, 123, 131, 133]
+    # in_result = {'nums': [7, 8, 9], 'result': 'straights_double', 'validate': True}
     # result = strategy(cards, in_result)
     # print(result)
+
+    # 测试pattern_spot
+    # patterns = pattern_spot([51,52,61,62,73,72,])
+    # with open('patterns', 'w') as f:
+    #     json.dump(patterns, f)
+
+    # 统计概率
+    # count = {'nongmin': 0, 'dizhu':0}
+    # for i in range(100000):
+    #     winner = android_play()
+    #     count[winner] += 1
+    #     print('第' + str(i+1) + '局，' + winner + '胜！')
+    # print('地主胜: ' + str(count['dizhu']))
+
+    # 开始玩
+    detect_user()
+
