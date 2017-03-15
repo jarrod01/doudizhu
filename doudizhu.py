@@ -704,12 +704,22 @@ def play(n, sockets = (0, 0, 0), host = ''):
         else:
             names[i] = ai_names[randint(0, len(ai_names)-1)]
             ai_names.remove(names[i])
-            if patterns[i]['two_jokers'] or patterns[i]['fours']:
-                scores.append(3)
-            elif 14 in patterns[i]['ones']:
-                scores.append(2)
+            # 先随机一个区间
+            if patterns[i]['two_jokers'] or patterns[i]['fours'] or patterns[i]['straights_triple']:
+                tmp_score = randint(9, 12)
+            elif 15 in patterns[i]['ones'] or patterns[i]['straights_triple']:
+                tmp_score = randint(6, 9)
+            elif 14 in patterns[i]['ones'] or patterns[i]['straights_double'] or patterns[i]['straights']:
+                tmp_score = randint(3, 6)
             else:
+                tmp_score = randint(1, 3)
+            # 再根据区间判断叫分
+            if tmp_score <= 4:
                 scores.append(1)
+            elif tmp_score > 8:
+                scores.append(3)
+            else:
+                scores.append(2)
             if person[i-1] == 2:
                 data = names[i] + '叫' + str(scores[i]) + '分！\n'
                 print(data)
@@ -864,12 +874,22 @@ def android_play(n=0, sockets = (0, 0, 0), host = ''):
         patterns.append(pattern_spot(players_cards[i]))
         names[i] = ai_names[randint(0, len(ai_names)-1)]
         ai_names.remove(names[i])
-        if patterns[i]['two_jokers'] or patterns[i]['fours']:
-            scores.append(3)
-        elif 14 in patterns[i]['ones']:
-            scores.append(2)
+        # 先随机一个区间
+        if patterns[i]['two_jokers'] or patterns[i]['fours'] or patterns[i]['straights_triple']:
+            tmp_score = randint(9, 12)
+        elif 15 in patterns[i]['ones'] or patterns[i]['straights_triple']:
+            tmp_score = randint(6, 9)
+        elif 14 in patterns[i]['ones'] or patterns[i]['straights_double'] or patterns[i]['straights']:
+            tmp_score = randint(3, 6)
         else:
+            tmp_score = randint(1, 3)
+        # 再根据区间判断叫分
+        if tmp_score <= 4:
             scores.append(1)
+        elif tmp_score > 8:
+            scores.append(3)
+        else:
+            scores.append(2)
     dizhu = scores.index(max(scores))
     players_cards[dizhu] += players_cards[3]
     players_cards[dizhu].sort()
@@ -1109,13 +1129,13 @@ if __name__ == '__main__':
     #     json.dump(patterns, f)
 
     # 统计概率
-    # count = {'nongmin': 0, 'dizhu':0}
-    # for i in range(100000):
-    #     winner = android_play()
-    #     count[winner] += 1
-    #     print('第' + str(i+1) + '局，' + winner + '胜！')
-    # print('地主胜: ' + str(count['dizhu']))
+    count = {'nongmin': 0, 'dizhu':0}
+    for i in range(10000):
+        winner = android_play()
+        count[winner] += 1
+        print('第' + str(i+1) + '局，' + winner + '胜！')
+    print('地主胜: ' + str(count['dizhu']))
 
     # 开始玩
-    detect_user()
+    #detect_user()
 
